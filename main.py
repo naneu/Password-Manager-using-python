@@ -1,4 +1,5 @@
 import random
+import json
 from tkinter import *
 from tkinter import messagebox
 
@@ -34,20 +35,58 @@ def save_data():
     website = web_input.get()
     email = email_input.get()
     password = pass_input.get()
-
+    new_data = {
+        website:{
+            "email": email,
+            "password": password
+            }
+        }
 
     if len(website) == 0 or len(password) == 0:
         messagebox.showinfo(title="Oooops", message="Please don't leave any fields empty!!!")
 
     else: 
-        is_ok = messagebox.askokcancel(title=website, message=f"These are the details entered: \nEmail: {email}\nPassword: {password}\nIs it ok to save?")
+        try: 
+            with open("data.json", "r") as file:
+                #reading the old data
+                data = json.load(file)
+        except FileNotFoundError:
+            with open("data.json", "w") as file:
+                json.dump(new_data, file, indent=4)
+        else:
+            #update with the new data
+            data.update(new_data)
+      
 
-        if is_ok:
+            with open("data.json", "w") as file:
+                #saving thr updated data
+                json.dump(data, file, indent=4)
+        finally: 
+            web_input.delete(0, END)
+            pass_input.delete(0, END)
+
+        
+
+#----------------------------- SEARCH FUNCTIONALITY --------------------------#
+def find_password():
+    website = web_input.get()
+    try: 
+        with open("data.json") as data_file:
+            data = json.load(data_file)
+    except FileNotFoundError:
+        messagebox.showinfo(title="Error", message="No Data File Found")
             
-            with open("data.txt", "a") as file:
-                file.write(f" {website} | {email} | {password}\n")
-                web_input.delete(0, END)
-                pass_input.delete(0, END)
+    else: 
+        if website in data:
+            email = data[website]['email']
+            password = data[website]['password']
+            messagebox.showinfo(title=website, message=f"Email: {email}\nPassword is: {password}")
+        else:
+            messagebox.showinfo(title="Error", message=f"No details for {website} exists.")
+
+    finally: 
+        web_input.delete(0, END)
+        
 
 # ---------------------------- UI SETUP ------------------------------- #
 
@@ -78,10 +117,13 @@ add_btn.grid(row=4, column=1, columnspan=2)
 gen_btn = Button(text="Generate Password", command=generate_password)
 gen_btn.grid(row=3, column=2)
 
+search_button = Button(text="Search",width=16,  command=find_password)
+search_button.grid(row=1, column=2)
+
 #entries
 
-web_input = Entry(width=35)
-web_input.grid(row=1, column=1, columnspan=2)
+web_input = Entry(width=21)
+web_input.grid(row=1, column=1)
 web_input.focus()
 website = web_input.get()
 
